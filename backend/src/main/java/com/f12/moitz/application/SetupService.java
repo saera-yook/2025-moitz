@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 @Service
 @RequiredArgsConstructor
@@ -35,10 +36,13 @@ public class SetupService {
     private final PlaceFinder placeFinder;
 
     public void setup() {
-        log.info("SubwayMapPathFinder 초기화 시작");
+        final StopWatch stopWatch = new StopWatch();
+        stopWatch.start("애플리케이션 셋업 시작");
+        log.info("SubwayEdges 초기화 시작");
 
         // 지하철 노선도 데이터 존재하는지 확인
         if (subwayStationService.getCount() > 0 && subwayEdgeService.getCount() > 0) {
+            log.info("DB에 데이터가 있습니다. 저장된 데이터를 사용합니다.");
             return;
         }
 
@@ -69,6 +73,8 @@ public class SetupService {
 
         // 엣지 데이터 저장
         subwayEdgeService.saveAll(subwayEdges);
+        stopWatch.stop();
+        log.info("SubwayEdges 초기화 완료(소요시간: {}). 서비스 시작.", stopWatch.getTotalTimeMillis());
     }
 
     private SubwayEdges assembleSubwayStations(final List<SubwayStation> stations, final List<RawRouteInfo> rawRoutes) {
