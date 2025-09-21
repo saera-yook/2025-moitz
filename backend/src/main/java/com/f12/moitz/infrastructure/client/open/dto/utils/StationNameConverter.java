@@ -10,7 +10,8 @@ public class StationNameConverter extends JsonDeserializer<String> {
 
     private static final Map<String, String> NAME_EXCEPTIONS = Map.of(
             "이수", "총신대입구역",
-            "서울역", "서울역"
+            "서울역", "서울역",
+            "경의선 지선", "경의선"
     );
 
     @Override

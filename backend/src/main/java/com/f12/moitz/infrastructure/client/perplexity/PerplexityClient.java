@@ -28,6 +28,62 @@ public class PerplexityClient {
     private final WebClient perplexityWebClient;
     private final ObjectMapper objectMapper;
 
+    public RecommendedLocationsResponse generateForTest(final String prompt) {
+        try {
+            PerplexityResponse perplexityResponse = perplexityWebClient.post()
+                    .uri("/chat/completions")
+                    .bodyValue(prompt)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleApiError)
+                    .bodyToMono(PerplexityResponse.class)
+                    .retryWhen(Retry.max(1)
+                            .filter(throwable -> throwable instanceof RetryableApiException
+                                                 || throwable instanceof TimeoutException)
+                            .doBeforeRetry(retrySignal ->
+                                    log.warn(
+                                            "API 호출 실패. 재시도 #{} 시작. 실패 원인: {}",
+                                            retrySignal.totalRetries() + 1,
+                                            retrySignal.failure().getMessage()
+                                    )
+                            )
+                            .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+                                    new ExternalApiException(ExternalApiErrorCode.PERPLEXITY_API_SERVER_UNRESPONSIVE)
+                            )
+                    )
+                    .doOnSuccess(response -> {
+                                if (response != null && response.usage() != null) {
+                                    log.debug("Perplexity API 호출 성공 토큰 사용량: {}개", response.usage().totalTokens());
+                                }
+                            }
+                    )
+                    .block();
+
+            final String originalText = perplexityResponse.choices().getFirst().message().content();
+            log.info("Perplexity 응답: {}", originalText);
+
+            String expectedText = """
+                    {
+                        "recommendations": [
+                            {
+                                "locationName": "신촌역",
+                                "reason": "접근성 좋고 맛집이 많아요! 😋"
+                                "description": "접근성 좋고 맛집이 많아요! 😋"
+                            },
+                            {
+                                "locationName": "이대역",
+                                "reason": "학생들이 많아 맛집이 많아요! 🍜"
+                                "description": "학생들이 많아 맛집이 많아요! 🍜"
+                            }
+                        ]
+                    }
+                    """;
+
+            return objectMapper.readValue(expectedText, RecommendedLocationsResponse.class);
+        } catch (IOException e) {
+            throw new ExternalApiException(ExternalApiErrorCode.INVALID_PERPLEXITY_API_RESPONSE);
+        }
+    }
+
     public RecommendedLocationsResponse generateResponse(
             final List<String> stationNames,
             final String requirement

@@ -45,7 +45,7 @@ public class RecommendationService {
     public RecommendationService(
             @Autowired final SubwayStationService subwayStationService,
             @Qualifier("placeRecommenderAdapter") final PlaceRecommender placeRecommender,
-            @Autowired final LocationRecommender locationRecommender,
+            @Qualifier("testLocationRecommenderAdapter") final LocationRecommender locationRecommender,
             @Qualifier("subwayRouteFinderAdapter") final RouteFinder routeFinder,
             @Autowired final RecommendationMapper recommendationMapper,
             @Autowired RecommendResultRepository recommendResultRepository
@@ -60,6 +60,7 @@ public class RecommendationService {
 
     public String recommendLocation(final RecommendationRequest request) {
         StopWatch stopWatch = new StopWatch("추천 서비스 전체");
+        log.info("지역 추천 서비스 시작");
 
         stopWatch.start("지역 추천");
         final String requirement = RecommendCondition.fromTitle(request.requirement()).getKeyword();
@@ -104,8 +105,9 @@ public class RecommendationService {
                 placeRoutes
         );
         stopWatch.stop();
-        System.out.println(stopWatch.prettyPrint());
+//        System.out.println(stopWatch.prettyPrint());
 
+        log.info("지역 추천 서비스 종료. 소요시간: {}", stopWatch.getTotalTimeMillis());
         return recommendResultRepository.saveAndReturnId(
                 recommendationMapper.toResult(
                         startingPlaces,
@@ -155,7 +157,7 @@ public class RecommendationService {
 
     public RecommendationsResponse findResultById(final String id) {
         final Result result = recommendResultRepository.findById(new ObjectId(id))
-                .orElseThrow(() -> new IllegalArgumentException("아이디에 해당하는 결과를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("아이디에 해당하는 결과를 찾을 수 없습니다. id: " + id));
         return recommendationMapper.toResponse(result);
     }
 

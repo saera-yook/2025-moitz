@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LocationRecommenderAdapter implements LocationRecommender {
+public class TestLocationRecommenderAdapter implements LocationRecommender {
 
     private final GoogleGeminiClient geminiClient;
     private final PerplexityClient perplexityClient;
@@ -30,10 +30,7 @@ public class LocationRecommenderAdapter implements LocationRecommender {
             final List<String> startPlaceNames,
             final String condition
     ) {
-        final RecommendedLocationsResponse generatedResponse = geminiClient.generateResponse(
-                startPlaceNames,
-                condition
-        );
+        final RecommendedLocationsResponse generatedResponse = geminiClient.generateForTest("Say \"Hello, world!\"");
         final RecommendedLocationsResponse deduplicatedLocations = deduplicateLocation(generatedResponse);
         return excludeStartPlaces(
                 deduplicatedLocations,
@@ -47,10 +44,7 @@ public class LocationRecommenderAdapter implements LocationRecommender {
             final String condition
     ) {
         log.info("Gemini 호출 응답 실패. Perplexity 호출을 시도합니다.");
-        final RecommendedLocationsResponse generatedResponse = perplexityClient.generateResponse(
-                startPlaceNames,
-                condition
-        );
+        final RecommendedLocationsResponse generatedResponse = perplexityClient.generateForTest("Say \"Hello, world!\"");
         final RecommendedLocationsResponse deduplicatedLocations = deduplicateLocation(generatedResponse);
         return excludeStartPlaces(
                 deduplicatedLocations,
@@ -74,8 +68,8 @@ public class LocationRecommenderAdapter implements LocationRecommender {
     ) {
         return new RecommendedLocationsResponse(
                 response.recommendations().stream()
-                .filter(recommendation -> !startPlaceNames.contains(recommendation.locationName()))
-                .toList()
+                        .filter(recommendation -> !startPlaceNames.contains(recommendation.locationName()))
+                        .toList()
         );
     }
 
