@@ -78,6 +78,36 @@ public class GoogleGeminiClient {
         return extractResponse(response).getPlacesByStationName();
     }
 
+    public RecommendedLocationsResponse generateForTest(String prompt) {
+        final GenerateContentConfig config = GenerateContentConfig.builder()
+                .temperature(0.4F)
+                .responseMimeType("application/json")
+                .maxOutputTokens(5000)
+                .build();
+
+        GenerateContentResponse response = generateWith(prompt, config);
+        log.info("Gemini 응답: {}", response.text());
+
+        String expectedText = """
+                    {
+                        "recommendations": [
+                            {
+                                "locationName": "신촌역",
+                                "reason": "접근성 좋고 맛집이 많아요! 😋"
+                                "description": "접근성 좋고 맛집이 많아요! 😋"
+                            },
+                            {
+                                "locationName": "이대역",
+                                "reason": "학생들이 많아 맛집이 많아요! 🍜"
+                                "description": "학생들이 많아 맛집이 많아요! 🍜"
+                            }
+                        ]
+                    }
+                    """;
+
+        return readValue(expectedText, RecommendedLocationsResponse.class);
+    }
+
     public GenerateContentResponse generateWith(final String prompt, final GenerateContentConfig config) {
         return generateWith(List.of(Content.fromParts(Part.fromText(prompt))), config);
     }
