@@ -25,7 +25,7 @@ import org.xml.sax.SAXException;
 public class OpenApiClient {
 
     private static final String OPEN_BASE_SEARCH = "/getShtrmPath";
-    private static final String SEARCH_DATE_HOUR = "2025-08-11 18:00:00";
+    private static final String SEARCH_DATE_HOUR = "2025-09-26 18:00:00";
     private static final String SEARCH_TYPE_DURATION = "duration";
     private static final String SEARCH_TYPE_TRANSFER = "transfer";
 
