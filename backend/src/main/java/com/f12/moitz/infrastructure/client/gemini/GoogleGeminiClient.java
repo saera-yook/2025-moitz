@@ -93,13 +93,13 @@ public class GoogleGeminiClient {
                         "recommendations": [
                             {
                                 "locationName": "신촌역",
-                                "reason": "접근성 좋고 맛집이 많아요! 😋"
-                                "description": "접근성 좋고 맛집이 많아요! 😋"
+                                "detail_reason": "접근성 좋고 맛집이 많아요! 😋",
+                                "summarize_reason": "접근성 좋고 맛집이 많아요! 😋"
                             },
                             {
                                 "locationName": "이대역",
-                                "reason": "학생들이 많아 맛집이 많아요! 🍜"
-                                "description": "학생들이 많아 맛집이 많아요! 🍜"
+                                "detail_reason": "학생들이 많아 맛집이 많아요! 🍜",
+                                "summarize_reason": "학생들이 많아 맛집이 많아요! 🍜"
                             }
                         ]
                     }
