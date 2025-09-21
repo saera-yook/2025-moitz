@@ -6,6 +6,7 @@ import com.f12.moitz.common.error.exception.ExternalApiException;
 import com.f12.moitz.common.error.exception.RetryableApiException;
 import com.f12.moitz.infrastructure.client.perplexity.dto.PerplexityRequest;
 import com.f12.moitz.infrastructure.client.perplexity.dto.PerplexityResponse;
+import com.f12.moitz.infrastructure.client.perplexity.dto.TestPerplexityRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.timeout.TimeoutException;
 import java.io.IOException;
@@ -29,10 +30,15 @@ public class PerplexityClient {
     private final ObjectMapper objectMapper;
 
     public RecommendedLocationsResponse generateForTest(final String prompt) {
+        final TestPerplexityRequest requestPayload = new TestPerplexityRequest(
+                "sonar-pro",
+                List.of(new PerplexityRequest.Message("user", prompt))
+        );
+
         try {
             PerplexityResponse perplexityResponse = perplexityWebClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(prompt)
+                    .bodyValue(requestPayload)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, this::handleApiError)
                     .bodyToMono(PerplexityResponse.class)
