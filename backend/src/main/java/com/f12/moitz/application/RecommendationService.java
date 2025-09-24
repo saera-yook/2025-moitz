@@ -48,7 +48,7 @@ public class RecommendationService {
     public RecommendationService(
             @Autowired final SubwayStationService subwayStationService,
             @Qualifier("placeRecommenderAdapter") final PlaceRecommender placeRecommender,
-            @Autowired final LocationRecommender locationRecommender,
+            @Qualifier("testLocationRecommenderAdapter") final LocationRecommender locationRecommender,
             @Qualifier("subwayRouteFinderAdapter") final RouteFinder routeFinder,
             @Autowired final RecommendationMapper recommendationMapper,
             @Autowired RecommendResultRepository recommendResultRepository
