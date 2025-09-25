@@ -6,6 +6,7 @@ import com.f12.moitz.common.error.exception.ExternalApiException;
 import com.f12.moitz.common.error.exception.RetryableApiException;
 import com.f12.moitz.infrastructure.client.gemini.GoogleGeminiClient;
 import com.f12.moitz.infrastructure.client.perplexity.PerplexityClient;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.decorators.Decorators;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TestLocationRecommenderAdapter implements LocationRecommender {
 
+    private final CircuitBreaker geminiBreaker;
+    private final CircuitBreaker geminiRetryableBreaker;
     private final GoogleGeminiClient geminiClient;
     private final PerplexityClient perplexityClient;
 
@@ -36,37 +39,16 @@ public class TestLocationRecommenderAdapter implements LocationRecommender {
             final List<String> startPlaceNames,
             final String condition
     ) {
-        CircuitBreakerConfig configForQuota = CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .waitDurationInOpenState(Duration.ofMillis(10000))
-                .permittedNumberOfCallsInHalfOpenState(2)
-                .slidingWindowSize(1)
-                .minimumNumberOfCalls(1)
-                .recordExceptions(ExternalApiException.class)
-                .ignoreExceptions(RetryableApiException.class)
-                .build();
+        Supplier<RecommendedLocationsResponse> geminiCall = () -> geminiClient.generateForTest(
+                "Say \"Hello, world!\"");
 
-        CircuitBreaker breakerForQuota = CircuitBreaker.of("breakerForQuota", configForQuota);
-
-        CircuitBreakerConfig configForRetryable = CircuitBreakerConfig.custom()
-                .failureRateThreshold(60)
-                .waitDurationInOpenState(Duration.ofMillis(10000))
-                .permittedNumberOfCallsInHalfOpenState(2)
-                .slidingWindowSize(5)
-                .minimumNumberOfCalls(1)
-                .recordExceptions(RetryableApiException.class)
-                .ignoreExceptions(ExternalApiException.class)
-                .build();
-
-        CircuitBreaker breakerForRetryable = CircuitBreaker.of("breakerForRetryable", configForRetryable);
-
-        Supplier<RecommendedLocationsResponse> decoratedSupplier = Decorators.ofSupplier(() -> geminiClient.generateForTest("Say \"Hello, world!\""))
-                .withCircuitBreaker(breakerForQuota)
-                .withCircuitBreaker(breakerForRetryable)
-                .withFallback(List.of(ExternalApiException.class), throwable -> fallback())
+        Supplier<RecommendedLocationsResponse> decoratedGeminiCall = Decorators.ofSupplier(geminiCall)
+                .withCircuitBreaker(geminiBreaker)
+                .withCircuitBreaker(geminiRetryableBreaker)
+                .withFallback(List.of(ExternalApiException.class, CallNotPermittedException.class), throwable -> fallback())
                 .decorate();
 
-        final RecommendedLocationsResponse generatedResponse = decoratedSupplier.get();
+        final RecommendedLocationsResponse generatedResponse = decoratedGeminiCall.get();
 
         final RecommendedLocationsResponse deduplicatedLocations = deduplicateLocation(generatedResponse);
         return excludeStartPlaces(
@@ -76,7 +58,7 @@ public class TestLocationRecommenderAdapter implements LocationRecommender {
     }
 
     private RecommendedLocationsResponse fallback() {
-        log.info("FallBack: Gemini 호출 응답 실패. Perplexity 호출을 시도합니다.");
+        log.info("FallBack: Perplexity 호출을 시도합니다.");
         return perplexityClient.generateForTest("Say \"Hello, world!\"");
     }
 

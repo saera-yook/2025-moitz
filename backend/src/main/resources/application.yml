@@ -1,0 +1,49 @@
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 60
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+        minimumNumberOfCalls: 1
+
+    instances:
+      gemini:
+        baseConfig: default
+        slidingWindowSize: 1
+        recordExceptions:
+          - com.f12.moitz.common.error.exception.ExternalApiException
+        ignoreExceptions:
+          - com.f12.moitz.common.error.exception.RetryableApiException
+      geminiRetryable:
+        baseConfig: default
+        recordExceptions:
+          - com.f12.moitz.common.error.exception.RetryableApiException
+        ignoreExceptions:
+          - com.f12.moitz.common.error.exception.ExternalApiException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  cloudwatch:
+    metrics:
+      export:
+        namespace: Moitz   # CloudWatch Metrics 네임스페이스(필수)
+        step: 30s # 전송 주기(기본 1m)
+  # 공통 태그(차원) 권장
+  metrics:
+    tags:
+      app: moitz
+      env: dev
+
+spring:
+  cloud:
+    aws:
+      cloudwatch:
+        enabled: true
+      region:
+        static: ap-northeast-2   # 혹은 IMDS/ENV로 자동 감지
