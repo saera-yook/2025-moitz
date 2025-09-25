@@ -41,11 +41,3 @@ management:
     tags:
       app: moitz
       env: dev
-
-spring:
-  cloud:
-    aws:
-      cloudwatch:
-        enabled: true
-      region:
-        static: ap-northeast-2   # 혹은 IMDS/ENV로 자동 감지
