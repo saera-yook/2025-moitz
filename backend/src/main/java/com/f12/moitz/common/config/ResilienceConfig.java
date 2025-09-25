@@ -2,6 +2,7 @@ package com.f12.moitz.common.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +23,8 @@ public class ResilienceConfig {
     @Bean
     public CircuitBreaker geminiRetryableBreaker() {
         final CircuitBreaker circuitBreaker = registry.circuitBreaker("geminiRetryable");
-        circuitBreaker.getEventPublisher();
+        circuitBreaker.getEventPublisher()
+                .onIgnoredError(CircuitBreakerOnIgnoredErrorEvent::getEventType);
         return circuitBreaker;
     }
 
