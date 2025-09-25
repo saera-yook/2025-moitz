@@ -34,8 +34,10 @@ management:
   metrics:
     export:
       cloudwatch:
+        enabled: true
         namespace: Moitz2025Dev   # CloudWatch Metrics 네임스페이스(필수)
         step: 30s # 전송 주기(기본 1m)
+        region: ap-northeast-2
     tags:
       app: moitz
       env: dev
