@@ -26,11 +26,6 @@ resilience4j:
           - io.github.resilience4j.circuitbreaker.CallNotPermittedException
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  # 공통 태그(차원) 권장
   metrics:
     export:
       cloudwatch:
