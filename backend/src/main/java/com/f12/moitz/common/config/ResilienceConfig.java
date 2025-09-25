@@ -18,23 +18,15 @@ public class ResilienceConfig {
 
     @Bean
     public CircuitBreaker geminiBreaker() {
-        MeterRegistry meterRegistry = new SimpleMeterRegistry();
-
-        TaggedCircuitBreakerMetrics
-                .ofCircuitBreakerRegistry(registry)
-                .bindTo(meterRegistry);
-
         final CircuitBreaker circuitBreaker = registry.circuitBreaker("gemini");
         circuitBreaker.getEventPublisher();
-
         return circuitBreaker;
     }
 
     @Bean
     public CircuitBreaker geminiRetryableBreaker() {
         final CircuitBreaker circuitBreaker = registry.circuitBreaker("geminiRetryable");
-        circuitBreaker.getEventPublisher()
-                .onIgnoredError(CircuitBreakerOnIgnoredErrorEvent::getEventType);
+        circuitBreaker.getEventPublisher();
         return circuitBreaker;
     }
 
