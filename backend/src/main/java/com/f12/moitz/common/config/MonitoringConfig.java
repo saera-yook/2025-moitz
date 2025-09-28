@@ -56,11 +56,7 @@ public class MonitoringConfig {
             String uri = id.getTag("uri");
             return id.getName().startsWith("http.server.requests") &&
                    uri != null && !uri.contains("swagger") && !uri.contains("api-docs")
-                   || id.getName().startsWith("resilience4j.circuitbreaker.")
-                   || id.getName().startsWith("executor.completed") || id.getName().startsWith("executor.queued")
-                   || id.getName().startsWith("jvm.threads")
-                   || id.getName().startsWith("jvm.memory.used")
-                   || id.getName().startsWith("process");
+                   || id.getName().startsWith("resilience4j.circuitbreaker.");
         });
     }
 
