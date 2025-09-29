@@ -114,7 +114,7 @@ public class RecommendationService {
                 placeRoutes
         );
         stopWatch.stop();
-        log.debug("추천 서비스 완료. {}", stopWatch.shortSummary());
+        log.debug("추천 서비스 완료. 소요시간: {}s", stopWatch.getTotalTimeSeconds());
 
         return recommendResultRepository.saveAndReturnId(
                 recommendationMapper.toResult(
