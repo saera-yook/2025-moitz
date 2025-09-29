@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 @Slf4j
 @Component
@@ -38,6 +39,8 @@ public class LocationRecommenderAdapter implements LocationRecommender {
             final List<String> candidatePlaces,
             final String requirement
     ) {
+        final StopWatch stopWatch = new StopWatch("Gemini API 호출");
+        stopWatch.start();
         final Supplier<RecommendedLocationsResponse> geminiCall = () -> geminiClient.generateResponse(
                 startingPlaces,
                 candidatePlaces,
@@ -54,13 +57,12 @@ public class LocationRecommenderAdapter implements LocationRecommender {
                 .decorate();
 
         final RecommendedLocationsResponse generatedResponse = decoratedGeminiCall.get();
+        stopWatch.stop();
+        log.debug("Gemini API 호출 완료. 소요시간: {}s", stopWatch.getTotalTimeSeconds());
 
         final RecommendedLocationsResponse deduplicatedLocations = deduplicateLocation(generatedResponse);
 
-        return excludeStartPlaces(
-                deduplicatedLocations,
-                startingPlaces
-        );
+        return excludeStartPlaces(deduplicatedLocations, startingPlaces);
     }
 
     private RecommendedLocationsResponse fallback(final List<String> startingPlaces, final String requirement) {
@@ -70,23 +72,19 @@ public class LocationRecommenderAdapter implements LocationRecommender {
 
     @Recover
     public RecommendedLocationsResponse recoverRecommendedLocations(
-            final List<String> startPlaceNames,
-            final String condition
+            final List<String> startingPlaces,
+            final List<String> candidatePlaces,
+            final String requirement
     ) {
         final RecommendedLocationsResponse generatedResponse = perplexityClient.generateResponse(
-                startPlaceNames,
-                condition
+                startingPlaces,
+                requirement
         );
         final RecommendedLocationsResponse deduplicatedLocations = deduplicateLocation(generatedResponse);
-        return excludeStartPlaces(
-                deduplicatedLocations,
-                startPlaceNames
-        );
+        return excludeStartPlaces(deduplicatedLocations, startingPlaces);
     }
 
-    private RecommendedLocationsResponse deduplicateLocation(
-            final RecommendedLocationsResponse response
-    ) {
+    private RecommendedLocationsResponse deduplicateLocation(final RecommendedLocationsResponse response) {
         return new RecommendedLocationsResponse(
                 response.recommendations().stream()
                         .distinct()
