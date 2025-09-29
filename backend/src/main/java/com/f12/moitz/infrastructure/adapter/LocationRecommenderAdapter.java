@@ -41,6 +41,8 @@ public class LocationRecommenderAdapter implements LocationRecommender {
     ) {
         final StopWatch stopWatch = new StopWatch("Gemini API 호출");
         stopWatch.start();
+        log.debug("지역 추천 시작");
+
         final Supplier<RecommendedLocationsResponse> geminiCall = () -> geminiClient.generateResponse(
                 startingPlaces,
                 candidatePlaces,
@@ -58,7 +60,7 @@ public class LocationRecommenderAdapter implements LocationRecommender {
 
         final RecommendedLocationsResponse generatedResponse = decoratedGeminiCall.get();
         stopWatch.stop();
-        log.debug("Gemini API 호출 완료. 소요시간: {}s", stopWatch.getTotalTimeSeconds());
+        log.debug("LLM 응답 완료. 소요시간: {}s", stopWatch.getTotalTimeSeconds());
 
         final RecommendedLocationsResponse deduplicatedLocations = deduplicateLocation(generatedResponse);
 
